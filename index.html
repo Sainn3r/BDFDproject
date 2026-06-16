@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a1a;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+  }
+
+  .stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle var(--d) infinite alternate;
+  }
+
+  @keyframes twinkle {
+    from { opacity: 0.2; transform: scale(1); }
+    to { opacity: 1; transform: scale(1.4); }
+  }
+
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,255,100,0.015) 2px, rgba(0,255,100,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+    text-align: center;
+  }
+
+  .health-bar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #00ff88;
+    flex-wrap: wrap;
+  }
+
+  .health-bar {
+    width: min(200px, 50vw);
+    height: 16px;
+    border: 2px solid #00ff88;
+    background: #0a0a1a;
+    overflow: hidden;
+  }
+
+  .health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #00ffcc);
+    animation: healthPulse 2s infinite;
+    width: 100%;
+  }
+
+  @keyframes healthPulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .level-badge {
+    background: #ff6b00;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(6px, 2vw, 8px);
+    padding: 6px 10px;
+    border: 2px solid #ffaa00;
+    margin: 0 auto 20px;
+    display: inline-block;
+    letter-spacing: 1px;
+  }
+
+  .title-glow {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(10px, 3.5vw, 20px);
+    color: #00ffcc;
+    text-shadow: 0 0 10px #00ffcc, 0 0 30px #00ffcc;
+    animation: titlePulse 3s infinite;
+    letter-spacing: 1px;
+    line-height: 1.8;
+  }
+
+  @keyframes titlePulse {
+    0%,100% { text-shadow: 0 0 10px #00ffcc, 0 0 30px #00ffcc; }
+    50% { text-shadow: 0 0 20px #00ffcc, 0 0 60px #00ffcc; }
+  }
+
+  .name-display {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(18px, 7vw, 46px);
+    background: linear-gradient(135deg, #ff6b00, #ffaa00, #ff6b00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: nameShine 3s infinite linear;
+    background-size: 200%;
+    margin: 8px 0 16px;
+    word-break: break-word;
+  }
+
+  @keyframes nameShine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .pixel-cake {
+    font-size: clamp(48px, 15vw, 72px);
+    animation: cakeGlow 2s infinite alternate;
+    display: block;
+    margin: 8px 0 14px;
+  }
+
+  @keyframes cakeGlow {
+    from { filter: drop-shadow(0 0 8px #ffaa00); }
+    to { filter: drop-shadow(0 0 25px #ff6b00); }
+  }
+
+  .combo-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(6px, 2.2vw, 9px);
+    color: #ff6b00;
+    text-shadow: 0 0 10px #ff6b00;
+    margin: 12px 0;
+    line-height: 1.8;
+  }
+
+  .message-box {
+    border: 3px solid #00ff88;
+    background: rgba(0,255,136,0.05);
+    padding: 18px 14px;
+    margin: 20px 0;
+    position: relative;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(7px, 2.2vw, 10px);
+    line-height: 2.2;
+    color: #ccffee;
+    text-shadow: 0 0 8px #00ff88;
+  }
+
+  .message-box::before {
+    content: '▶ MENSAJE';
+    position: absolute;
+    top: -12px;
+    left: 12px;
+    background: #0a0a1a;
+    padding: 0 6px;
+    color: #00ff88;
+    font-size: clamp(6px, 2vw, 9px);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .stat-card {
+    border: 2px solid;
+    padding: 12px 8px;
+    transition: transform 0.2s;
+    cursor: default;
+  }
+
+  .stat-card:active { transform: scale(0.96); }
+
+  .stat-card.blue  { border-color: #00aaff; background: rgba(0,170,255,0.07); }
+  .stat-card.green { border-color: #00ff88; background: rgba(0,255,136,0.07); }
+  .stat-card.orange{ border-color: #ff6b00; background: rgba(255,107,0,0.07); }
+  .stat-card.purple{ border-color: #bb44ff; background: rgba(187,68,255,0.07); }
+
+  .stat-icon  { font-size: clamp(22px, 7vw, 30px); display: block; margin-bottom: 6px; }
+  .stat-label { font-family: 'Press Start 2P', monospace; font-size: clamp(5px, 1.8vw, 7px); color: #888; letter-spacing: 1px; margin-bottom: 4px; }
+  .stat-value { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: clamp(9px, 3vw, 13px); }
+  .stat-card.blue .stat-value   { color: #00aaff; }
+  .stat-card.green .stat-value  { color: #00ff88; }
+  .stat-card.orange .stat-value { color: #ff8833; }
+  .stat-card.purple .stat-value { color: #cc66ff; }
+
+  .section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(7px, 2.5vw, 10px);
+    color: #ffaa00;
+    text-shadow: 0 0 10px #ffaa00;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+
+  .achievement-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .achievement {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,170,0,0.06);
+    border: 1px solid rgba(255,170,0,0.25);
+    padding: 10px 12px;
+    transition: all 0.2s;
+    cursor: default;
+    text-align: left;
+  }
+
+  .achievement:active { background: rgba(255,170,0,0.15); }
+
+  .ach-icon { font-size: clamp(18px, 6vw, 24px); flex-shrink: 0; }
+  .ach-name { font-family: 'Press Start 2P', monospace; font-size: clamp(5px, 1.8vw, 8px); color: #ffaa00; margin-bottom: 4px; }
+  .ach-desc { font-family: 'Orbitron', sans-serif; font-size: clamp(9px, 2.8vw, 11px); color: #888; }
+  .ach-badge {
+    margin-left: auto;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(5px, 1.8vw, 7px);
+    color: #ffaa00;
+    background: rgba(255,170,0,0.15);
+    border: 1px solid rgba(255,170,0,0.4);
+    padding: 3px 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .xp-bar-section { margin: 24px 0; }
+
+  .xp-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(5px, 1.8vw, 7px);
+    color: #888;
+    margin-bottom: 8px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .xp-track {
+    height: 20px;
+    background: #111128;
+    border: 2px solid #bb44ff;
+    overflow: hidden;
+  }
+
+  .xp-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #6600cc, #bb44ff, #ff88ff);
+    animation: xpGrow 2.5s ease-out 0.5s forwards;
+  }
+
+  @keyframes xpGrow { to { width: 87%; } }
+
+  .xp-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(5px, 1.8vw, 7px);
+    color: #cc66ff;
+    text-align: right;
+    margin-top: 5px;
+    text-shadow: 0 0 8px #bb44ff;
+  }
+
+  .btn-celebrate {
+    display: inline-block;
+    margin: 18px auto;
+    padding: 14px clamp(20px, 8vw, 36px);
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(8px, 3vw, 11px);
+    color: #0a0a1a;
+    background: linear-gradient(135deg, #00ff88, #00ffcc);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(0,255,136,0.4);
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .btn-celebrate:hover  { box-shadow: 0 0 40px rgba(0,255,136,0.7); transform: scale(1.04); }
+  .btn-celebrate:active { transform: scale(0.96); }
+
+  .particles-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00ff88, #00aaff, #bb44ff, transparent);
+    margin: 22px 0;
+  }
+
+  .footer-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(6px, 2vw, 8px);
+    color: #333;
+    margin-top: 36px;
+    letter-spacing: 1px;
+    animation: footerBlink 2s infinite;
+  }
+
+  @keyframes footerBlink {
+    0%,100% { opacity: 0.4; }
+    50% { opacity: 1; color: #00ff88; }
+  }
+
+  .cursor-blink { animation: blink 1s infinite; color: #00ff88; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="scanlines"></div>
+<div class="particles-container" id="particles"></div>
+
+<div class="container">
+
+  <div class="health-bar-container">
+    <span>HP</span>
+    <div class="health-bar"><div class="health-fill"></div></div>
+    <span>MAX</span>
+  </div>
+
+  <div class="level-badge">⚡ NIVEL ESPECIAL DESBLOQUEADO ⚡</div>
+
+  <div class="title-glow">✦ FELIZ CUMPLEAÑOS ✦</div>
+
+  <div class="name-display">FELIPE UNDERNIGG</div>
+
+  <span class="pixel-cake">🎂</span>
+
+  <div class="combo-text">🎮 +1 AÑO · NUEVO NIVEL<br>ALCANZADO · LOGRO DESBLOQUEADO 🎮</div>
+
+  <div class="divider"></div>
+
+  <div class="message-box">
+    HOY EL UNIVERSO GENERÓ<br>
+    UNA NUEVA PARTIDA PARA TI.<br><br>
+    OTRO AÑO DE EXPERIENCIA,<br>
+    OTRO AÑO DE PODER.<br><br>
+    QUE ESTE NIVEL ESTÉ LLENO<br>
+    DE ÉPICAS AVENTURAS Y<br>
+    CERO GAME OVERS.<span class="cursor-blink">█</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <span class="stat-icon">⚔️</span>
+      <div class="stat-label">PODER</div>
+      <div class="stat-value">LEGENDARIO</div>
+    </div>
+    <div class="stat-card green">
+      <span class="stat-icon">🛡️</span>
+      <div class="stat-label">DEFENSA</div>
+      <div class="stat-value">MÁXIMA</div>
+    </div>
+    <div class="stat-card orange">
+      <span class="stat-icon">🔥</span>
+      <div class="stat-label">CARISMA</div>
+      <div class="stat-value">999/999</div>
+    </div>
+    <div class="stat-card purple">
+      <span class="stat-icon">💎</span>
+      <div class="stat-label">RANGO</div>
+      <div class="stat-value">S+ TIER</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-title">🏆 LOGROS DESBLOQUEADOS</div>
+  <div class="achievement-list">
+    <div class="achievement">
+      <span class="ach-icon">🎯</span>
+      <div class="ach-text">
+        <div class="ach-name">SOBREVIVIENTE ÉPICO</div>
+        <div class="ach-desc">Completó otro año con éxito total</div>
+      </div>
+      <div class="ach-badge">+5000 XP</div>
+    </div>
+    <div class="achievement">
+      <span class="ach-icon">🌟</span>
+      <div class="ach-text">
+        <div class="ach-name">MODO LEYENDA</div>
+        <div class="ach-desc">Amigo de nivel completamente máximo</div>
+      </div>
+      <div class="ach-badge">+9999 XP</div>
+    </div>
+    <div class="achievement">
+      <span class="ach-icon">🚀</span>
+      <div class="ach-text">
+        <div class="ach-name">SIN LÍMITES</div>
+        <div class="ach-desc">Desafíos superados, poder infinito</div>
+      </div>
+      <div class="ach-badge">+7777 XP</div>
+    </div>
+    <div class="achievement">
+      <span class="ach-icon">👑</span>
+      <div class="ach-text">
+        <div class="ach-name">REY DEL JUEGO</div>
+        <div class="ach-desc">Porque nadie lo hace como Felipe</div>
+      </div>
+      <div class="ach-badge">ÚNICO</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="xp-bar-section">
+    <div class="xp-label-row">
+      <span>⚡ EXPERIENCIA DE VIDA</span>
+      <span>87% → PRÓXIMO NIVEL</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill"></div></div>
+    <div class="xp-text">22,774 XP · SIGUE SUBIENDO</div>
+  </div>
+
+  <button class="btn-celebrate" onclick="launchParticles()">🎉 ¡CELEBRAR! 🎉</button>
+
+  <div class="divider"></div>
+
+  <div class="footer-text">▶ TOCA PARA CONTINUAR...</div>
+
+</div>
+
+<script>
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 100; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;--d:${Math.random()*3+1}s;animation-delay:${Math.random()*4}s;`;
+    starsEl.appendChild(s);
+  }
+
+  function launchParticles() {
+    const container = document.getElementById('particles');
+    const colors = ['#00ff88','#00ffcc','#ff6b00','#ffaa00','#bb44ff','#00aaff','#ff4488','#ffff00'];
+    const shapes = ['▣','★','◆','●','▲','✦','■','♦'];
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      const angle = (Math.PI * 2 * i) / 60 + Math.random() * 0.5;
+      const dist = 150 + Math.random() * 300;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist - Math.random() * 250;
+      const dur = 0.8 + Math.random() * 1.2;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      p.style.cssText = `
+        position:absolute;
+        left:${cx}px;top:${cy}px;
+        color:${color};
+        font-size:${12+Math.random()*14}px;
+        pointer-events:none;
+        animation:particleFly ${dur}s ease-out forwards;
+        animation-delay:${Math.random()*0.2}s;
+        --tx:${tx}px;--ty:${ty}px;
+      `;
+      p.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+      container.appendChild(p);
+      setTimeout(() => p.remove(), (dur + 0.3) * 1000);
+    }
+  }
+
+  const style = document.createElement('style');
+  style.textContent = `@keyframes particleFly {
+    0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity:1; }
+    100% { transform: translate(var(--tx),var(--ty)) rotate(720deg) scale(0); opacity:0; }
+  }`;
+  document.head.appendChild(style);
+
+  document.addEventListener('keydown', launchParticles);
+  document.body.addEventListener('touchend', (e) => {
+    if (e.target.classList.contains('btn-celebrate')) return;
+  });
+</script>
+</body>
+</html>
